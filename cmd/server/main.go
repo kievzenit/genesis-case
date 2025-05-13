@@ -26,8 +26,10 @@ func main() {
 	router := routes.RegisterRoutes(weatherService)
 
 	server := &http.Server{
-		Addr:    cfg.ServerConfig.Address + ":" + fmt.Sprint(cfg.ServerConfig.Port),
-		Handler: router,
+		Addr:         cfg.ServerConfig.Address + ":" + fmt.Sprint(cfg.ServerConfig.Port),
+		Handler:      router,
+		ReadTimeout:  time.Duration(cfg.ServerConfig.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.ServerConfig.WriteTimeout) * time.Second,
 	}
 
 	go func() {
