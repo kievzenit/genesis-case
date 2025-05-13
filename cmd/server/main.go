@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"time"
 
+	"fmt"
+
 	"github.com/kievzenit/genesis-case/internal/api"
 	"github.com/kievzenit/genesis-case/internal/config"
-	"fmt"
+	"github.com/kievzenit/genesis-case/internal/services"
 )
 
 func main() {
@@ -19,7 +21,9 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	router := routes.RegisterRoutes()
+	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig.ApiKey, cfg.WeatherServiceConfig.HttpTimeout)
+
+	router := routes.RegisterRoutes(weatherService)
 
 	server := &http.Server{
 		Addr:    cfg.ServerConfig.Address + ":" + fmt.Sprint(cfg.ServerConfig.Port),
