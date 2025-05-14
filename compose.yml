@@ -1,0 +1,26 @@
+services:
+  wapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - WAPP_DB_HOST=db
+      - WAPP_DB_PORT=5432
+      - WAPP_DB_USER=wapp_user
+      - WAPP_DB_PASS=wapp_password
+      - WAPP_DB_NAME=wapp_db
+      - WAPP_DB_APPLY_MIGRATIONS=true
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: wapp_user
+      POSTGRES_PASSWORD: wapp_password
+      POSTGRES_DB: wapp_db
