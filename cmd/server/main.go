@@ -10,6 +10,13 @@ import (
 
 	"fmt"
 
+	"database/sql"
+	_ "github.com/jackc/pgx/v5"
+
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+
 	"github.com/kievzenit/genesis-case/internal/api"
 	"github.com/kievzenit/genesis-case/internal/config"
 	"github.com/kievzenit/genesis-case/internal/services"
@@ -22,6 +29,40 @@ func main() {
 	}
 
 	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig.ApiKey, cfg.WeatherServiceConfig.HttpTimeout)
+
+	sqlCon, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.DatabaseConfig.Host,
+		cfg.DatabaseConfig.Port,
+		cfg.DatabaseConfig.Username,
+		cfg.DatabaseConfig.Password,
+		cfg.DatabaseConfig.DatabaseName,
+	))
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer sqlCon.Close()
+	if err := sqlCon.Ping(); err != nil {
+		log.Fatalf("failed to ping database: %v", err)
+	}
+
+	driver, err := postgres.WithInstance(sqlCon, &postgres.Config{})
+	if err != nil {
+		log.Fatalf("failed to create database driver: %v", err)
+	}
+	migrator, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		"postgres",
+		driver,
+	)
+	if err != nil {
+		log.Fatalf("failed to create migrator: %v", err)
+	}
+	if cfg.DatabaseConfig.ApplyMigrations {
+		log.Println("applying migrations...")
+		if err := migrator.Up(); err != nil && err != migrate.ErrNoChange {
+			log.Fatalf("failed to apply migrations: %v", err)
+		}
+	}
 
 	router := routes.RegisterRoutes(weatherService)
 
