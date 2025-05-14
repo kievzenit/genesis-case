@@ -26,10 +26,12 @@ type WeatherServiceConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	Host            string
+	Port            int
+	Username        string
+	Password        string
+	DatabaseName    string
+	ApplyMigrations bool
 }
 
 type CacheConfig struct {
@@ -95,6 +97,16 @@ func LoadConfig() (*Config, error) {
 	if dbPass := os.Getenv("WAPP_DB_PASS"); dbPass != "" {
 		config.DatabaseConfig.Password = dbPass
 	}
+	if dbName := os.Getenv("WAPP_DB_NAME"); dbName != "" {
+		config.DatabaseConfig.DatabaseName = dbName
+	}
+	if applyMigrations := os.Getenv("WAPP_DB_APPLY_MIGRATIONS"); applyMigrations != "" {
+		applyMigrationsBool, err := strconv.ParseBool(applyMigrations)
+		if err != nil {
+			return nil, fmt.Errorf("malformed environment variable WAPP_DB_APPLY_MIGRATIONS: %w", err)
+		}
+		config.DatabaseConfig.ApplyMigrations = applyMigrationsBool
+	}
 
 	if cacheHost := os.Getenv("WAPP_CACHE_HOST"); cacheHost != "" {
 		config.CacheConfig.Host = cacheHost
@@ -123,10 +135,12 @@ func getDefaultConfig() *Config {
 			HttpTimeout: 3,
 		},
 		DatabaseConfig: &DatabaseConfig{
-			Host:     "localhost",
-			Port:     5432,
-			Username: "user",
-			Password: "password",
+			Host:            "localhost",
+			Port:            5432,
+			Username:        "user",
+			Password:        "password",
+			DatabaseName:    "dbname",
+			ApplyMigrations: false,
 		},
 		CacheConfig: &CacheConfig{
 			Host: "localhost",
