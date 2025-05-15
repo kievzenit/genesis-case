@@ -37,7 +37,7 @@ func main() {
 		log.Fatalf("failed to create scheduler: %v", err)
 	}
 
-	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig.ApiKey, cfg.WeatherServiceConfig.HttpTimeout)
+	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig)
 
 	emailService := services.NewEmailService()
 

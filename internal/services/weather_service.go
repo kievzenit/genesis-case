@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/kievzenit/genesis-case/internal/config"
 )
 
 type WeatherService interface {
@@ -13,14 +15,12 @@ type WeatherService interface {
 }
 
 type weatherService struct {
-	apiKey      string
-	httpTimeout int
+	cfg *config.WeatherServiceConfig
 }
 
-func NewWeatherService(apiKey string, httpTimeout int) WeatherService {
+func NewWeatherService(cfg *config.WeatherServiceConfig) WeatherService {
 	return &weatherService{
-		apiKey:      apiKey,
-		httpTimeout: httpTimeout,
+		cfg: cfg,
 	}
 }
 
@@ -59,10 +59,10 @@ const cityNotFoundApiErrorCode = 1006
 
 func (ws *weatherService) GetCurrentWeatherForCity(city string) (CurrentWeatherResponse, error) {
 	httpClient := &http.Client{
-		Timeout: time.Duration(ws.httpTimeout) * time.Second,
+		Timeout: time.Duration(ws.cfg.HttpTimeout) * time.Second,
 	}
 
-	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", ws.apiKey, city)
+	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", ws.cfg.ApiKey, city)
 	resp, err := httpClient.Get(url)
 	if err != nil {
 		return CurrentWeatherResponse{}, fmt.Errorf("failed to get weather data: %w", err)
