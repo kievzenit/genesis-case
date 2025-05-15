@@ -11,6 +11,8 @@ import (
 	"fmt"
 
 	"database/sql"
+
+	"github.com/go-co-op/gocron/v2"
 	_ "github.com/jackc/pgx/v5"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -19,6 +21,8 @@ import (
 
 	"github.com/kievzenit/genesis-case/internal/api"
 	"github.com/kievzenit/genesis-case/internal/config"
+	"github.com/kievzenit/genesis-case/internal/database"
+	"github.com/kievzenit/genesis-case/internal/jobs"
 	"github.com/kievzenit/genesis-case/internal/services"
 )
 
@@ -28,7 +32,14 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	scheduler, err := gocron.NewScheduler()
+	if err != nil {
+		log.Fatalf("failed to create scheduler: %v", err)
+	}
+
 	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig.ApiKey, cfg.WeatherServiceConfig.HttpTimeout)
+
+	emailService := services.NewEmailService()
 
 	sqlCon, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DatabaseConfig.Host,
@@ -64,7 +75,14 @@ func main() {
 		}
 	}
 
-	router := routes.RegisterRoutes(weatherService)
+	txManager := database.NewTransactionManager(sqlCon)
+
+	router := routes.RegisterRoutes(
+		weatherService,
+		emailService,
+		sqlCon,
+		txManager,
+	)
 
 	server := &http.Server{
 		Addr:         cfg.ServerConfig.Address + ":" + fmt.Sprint(cfg.ServerConfig.Port),
@@ -73,12 +91,27 @@ func main() {
 		WriteTimeout: time.Duration(cfg.ServerConfig.WriteTimeout) * time.Second,
 	}
 
+	sendConfirmationEmailJob := jobs.NewSendConfirmationEmailJob(
+		emailService,
+		txManager,
+	)
+
+	_, err = scheduler.NewJob(
+		gocron.DurationJob(time.Duration(cfg.JobsConfig.EmailConfirmationInterval)*time.Minute),
+		gocron.NewTask(sendConfirmationEmailJob.Run),
+	)
+	if err != nil {
+		log.Fatalf("failed to create job: %v", err)
+	}
+
 	go func() {
 		log.Printf("starting server on %s:%d", cfg.ServerConfig.Address, cfg.ServerConfig.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("failed to start server: %v", err)
 		}
 	}()
+
+	scheduler.Start()
 
 	quitChan := make(chan os.Signal, 1)
 	signal.Notify(quitChan, os.Interrupt, os.Kill)
@@ -90,6 +123,10 @@ func main() {
 
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("failed to shutdown server: %v", err)
+	}
+
+	if err := scheduler.Shutdown(); err != nil {
+		log.Fatalf("failed to shutdown scheduler: %v", err)
 	}
 
 	log.Println("server shut down gracefully")
