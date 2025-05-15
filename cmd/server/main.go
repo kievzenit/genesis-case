@@ -39,7 +39,7 @@ func main() {
 
 	weatherService := services.NewWeatherService(cfg.WeatherServiceConfig)
 
-	emailService := services.NewEmailService()
+	emailService := services.NewEmailService(cfg.EmailServiceConfig)
 
 	sqlCon, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DatabaseConfig.Host,

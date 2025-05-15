@@ -4,6 +4,7 @@ import (
 	"net/smtp"
 
 	"github.com/google/uuid"
+	"github.com/kievzenit/genesis-case/internal/config"
 )
 
 type WeatherData struct {
@@ -18,7 +19,7 @@ type EmailService interface {
 	SendWeatherReport(email string, city string, weatherData WeatherData) error
 }
 
-func NewEmailService() EmailService {
+func NewEmailService(cfg *config.EmailServiceConfig) EmailService {
 	return &emailService{
 		smtpClient: nil,
 	}
