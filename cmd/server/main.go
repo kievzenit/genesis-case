@@ -23,6 +23,7 @@ import (
 	"github.com/kievzenit/genesis-case/internal/config"
 	"github.com/kievzenit/genesis-case/internal/database"
 	"github.com/kievzenit/genesis-case/internal/jobs"
+	"github.com/kievzenit/genesis-case/internal/models"
 	"github.com/kievzenit/genesis-case/internal/services"
 )
 
@@ -101,7 +102,29 @@ func main() {
 		gocron.NewTask(sendConfirmationEmailJob.Run),
 	)
 	if err != nil {
-		log.Fatalf("failed to create job: %v", err)
+		log.Fatalf("failed to create send confirmation email job: %v", err)
+	}
+
+	sendWeatherReportJob := jobs.NewSendWeatherReportJob(
+		weatherService,
+		emailService,
+		sqlCon,
+	)
+
+	_, err = scheduler.NewJob(
+		gocron.DurationJob(time.Duration(1)*time.Hour),
+		gocron.NewTask(sendWeatherReportJob.Run, models.Hourly),
+	)
+	if err != nil {
+		log.Fatalf("failed to create send hourly weather report job: %v", err)
+	}
+
+	_, err = scheduler.NewJob(
+		gocron.DailyJob(1, gocron.NewAtTimes(gocron.NewAtTime(12, 0, 0))),
+		gocron.NewTask(sendWeatherReportJob.Run, models.Daily),
+	)
+	if err != nil {
+		log.Fatalf("failed to create send daily weather report job: %v", err)
 	}
 
 	go func() {
