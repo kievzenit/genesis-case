@@ -8,9 +8,10 @@ import (
 
 type Config struct {
 	*ServerConfig
+	*JobsConfig
 	*WeatherServiceConfig
+	*EmailServiceConfig
 	*DatabaseConfig
-	*CacheConfig
 }
 
 type ServerConfig struct {
@@ -20,10 +21,16 @@ type ServerConfig struct {
 	WriteTimeout int
 }
 
+type JobsConfig struct {
+	EmailConfirmationInterval int
+}
+
 type WeatherServiceConfig struct {
 	ApiKey      string
 	HttpTimeout int
 }
+
+type EmailServiceConfig struct {}
 
 type DatabaseConfig struct {
 	Host            string
@@ -32,11 +39,6 @@ type DatabaseConfig struct {
 	Password        string
 	DatabaseName    string
 	ApplyMigrations bool
-}
-
-type CacheConfig struct {
-	Host string
-	Port int
 }
 
 func LoadConfig() (*Config, error) {
@@ -65,6 +67,14 @@ func LoadConfig() (*Config, error) {
 			return nil, fmt.Errorf("malformed environment variable WAPP_SERVER_WRITE_TIMEOUT: %w", err)
 		}
 		config.ServerConfig.WriteTimeout = wrt
+	}
+
+	if emailConfirmationInterval := os.Getenv("WAPP_EMAIL_CONFIRMATION_INTERVAL"); emailConfirmationInterval != "" {
+		eci, err := strconv.Atoi(emailConfirmationInterval)
+		if err != nil {
+			return nil, fmt.Errorf("malformed environment variable WAPP_EMAIL_CONFIRMATION_INTERVAL: %w", err)
+		}
+		config.JobsConfig.EmailConfirmationInterval = eci
 	}
 
 	apiKey := os.Getenv("WAPP_WEATHER_API_KEY")
@@ -108,17 +118,6 @@ func LoadConfig() (*Config, error) {
 		config.DatabaseConfig.ApplyMigrations = applyMigrationsBool
 	}
 
-	if cacheHost := os.Getenv("WAPP_CACHE_HOST"); cacheHost != "" {
-		config.CacheConfig.Host = cacheHost
-	}
-	if cachePort := os.Getenv("WAPP_CACHE_PORT"); cachePort != "" {
-		p, err := strconv.Atoi(cachePort)
-		if err != nil {
-			return nil, fmt.Errorf("malformed environment variable WAPP_CACHE_PORT: %w", err)
-		}
-		config.CacheConfig.Port = p
-	}
-
 	return config, nil
 }
 
@@ -129,6 +128,9 @@ func getDefaultConfig() *Config {
 			Port:         8080,
 			ReadTimeout:  10,
 			WriteTimeout: 10,
+		},
+		JobsConfig: &JobsConfig{
+			EmailConfirmationInterval: 1,
 		},
 		WeatherServiceConfig: &WeatherServiceConfig{
 			ApiKey:      "",
@@ -141,10 +143,6 @@ func getDefaultConfig() *Config {
 			Password:        "password",
 			DatabaseName:    "dbname",
 			ApplyMigrations: false,
-		},
-		CacheConfig: &CacheConfig{
-			Host: "localhost",
-			Port: 6379,
 		},
 	}
 }
