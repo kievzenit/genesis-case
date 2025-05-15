@@ -3,6 +3,7 @@ package jobs
 import (
 	"context"
 	"database/sql"
+	"log"
 	"math"
 	"time"
 
@@ -27,7 +28,7 @@ func NewSendConfirmationEmailJob(
 }
 
 func (job *SendConfirmationEmailJob) Run() {
-	job.txManager.ExecuteTx(func(tx *sql.Tx) error {
+	err := job.txManager.ExecuteTx(func(tx *sql.Tx) error {
 		repository := repositories.NewConfirmationEmailsRepository(tx)
 
 		emails, err := repository.GetConfirmationEmailsToSend(context.Background())
@@ -61,4 +62,8 @@ func (job *SendConfirmationEmailJob) Run() {
 
 		return nil
 	})
+
+	if err != nil {
+		log.Printf("send confirmation email job finished with error: %v", err)
+	}
 }
