@@ -24,6 +24,7 @@ func RegisterRoutes(
 		txManager,
 	))
 	r.GET("confirm/:token", handlers.ConfirmSubscriptionHandler(database))
+	r.GET("unsubscribe/:token", handlers.UnsubscribeHandler(database))
 
 	return r
 }
