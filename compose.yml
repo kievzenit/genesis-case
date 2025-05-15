@@ -15,7 +15,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   db:
     image: postgres:17-alpine
     ports:
@@ -24,3 +25,8 @@ services:
       POSTGRES_USER: wapp_user
       POSTGRES_PASSWORD: wapp_password
       POSTGRES_DB: wapp_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wapp_user -d wapp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
