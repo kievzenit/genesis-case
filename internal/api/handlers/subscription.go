@@ -82,3 +82,32 @@ func SubscribeForWeatherHandler(
 		}
 	}
 }
+
+func ConfirmSubscriptionHandler(database database.Database) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		ctx := c.Request.Context()
+
+		tokenParam := c.Param("token")
+		if tokenParam == "" {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		token := uuid.MustParse(tokenParam)
+		if token == uuid.Nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		subscriptionRepository := repositories.NewSubscriptionRepository(database)
+		err := subscriptionRepository.ConfirmSubscriptionContext(ctx, token)
+		if err != nil {
+			if err == repositories.ErrConfirmationTokenNotFound {
+				c.AbortWithStatus(http.StatusNotFound)
+				return
+			}
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+	}
+}

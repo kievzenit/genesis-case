@@ -23,6 +23,7 @@ func RegisterRoutes(
 		database,
 		txManager,
 	))
+	r.GET("confirm/:token", handlers.ConfirmSubscriptionHandler(database))
 
 	return r
 }

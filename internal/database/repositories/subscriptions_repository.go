@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/kievzenit/genesis-case/internal/database"
@@ -30,6 +31,8 @@ func NewSubscriptionRepository(db database.Database) SubscriptionRepository {
 type subscriptionRepository struct {
 	db database.Database
 }
+
+var ErrConfirmationTokenNotFound = errors.New("confirmation token not found")
 
 func (r *subscriptionRepository) ConfirmSubscriptionContext(ctx context.Context, token uuid.UUID) error {
 	panic("unimplemented")
