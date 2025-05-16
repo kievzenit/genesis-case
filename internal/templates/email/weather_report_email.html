@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{.frequency | upperFirstLetter} Weather Report</title>
+    <style type="text/css">
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .content {
+            padding: 30px 20px;
+            background-color: #ffffff;
+        }
+        
+        h1 {
+            color: #2b87d1;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        .weather-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .city-name {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2b87d1;
+        }
+        
+        .date {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 20px;
+        }
+        
+        .weather-description {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .temperature {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 10px 0 20px 0;
+        }
+        
+        .details-grid {
+            display: table;
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: separate;
+            border-spacing: 10px;
+        }
+        
+        .details-row {
+            display: table-row;
+        }
+        
+        .detail-cell {
+            display: table-cell;
+            background-color: #e1f1ff;
+            padding: 15px 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2b87d1;
+        }
+        
+        .unsubscribe-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #f0f0f0;
+            color: #666666 !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #666666;
+            font-size: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        @media screen and (max-width: 480px) {
+            .email-container {
+                width: 100% !important;
+                padding: 10px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            .details-grid {
+                display: block;
+            }
+            
+            .details-row {
+                display: block;
+                margin-bottom: 10px;
+            }
+            
+            .detail-cell {
+                display: block;
+                width: auto !important;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="content">
+            <h1>{.frequency | upperFirstLetter} weather report</h1>
+            
+            <p>Hello there,</p>
+            
+            <p>Here's your {.frequency} weather update for today, {.date}.</p>
+            
+            <div class="weather-container">
+                <div class="city-name">.{city}</div>
+                <div class="date">{.fullDate} | {.time}</div>
+                
+                <div class="weather-description">{.description}</div>
+                <div class="temperature">.{temperature}°C</div>
+                
+                <div class="details-grid">
+                    <div class="details-row">
+                        <div class="detail-cell" style="width: 100%;">
+                            <div class="detail-label">HUMIDITY</div>
+                            <div class="detail-value">{.humidity}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p>Stay safe and informed,<br>The Wapp Team</p>
+            
+            <div style="text-align: center;">
+                <a href="{.unsubscibeLink}" class="unsubscribe-button">Unsubscribe from weather alerts</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><small>This weather report is sent to {.customerEmail}.</small></p>
+        </div>
+    </div>
+</body>
+</html>
