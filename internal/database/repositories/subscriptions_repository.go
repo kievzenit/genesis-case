@@ -24,7 +24,7 @@ type SubscriptionRepository interface {
 		ctx context.Context,
 		token uuid.UUID,
 	) (models.Subscription, error)
-	GetSubscriptionsByFrequencyContext(
+	GetConfirmedSubscriptionsByFrequencyContext(
 		ctx context.Context,
 		frequency models.Frequency,
 	) ([]models.Subscription, error)
@@ -42,20 +42,100 @@ func (r *subscriptionRepository) GetSubscriptionByTokenContext(
 	ctx context.Context,
 	token uuid.UUID,
 ) (models.Subscription, error) {
-	panic("unimplemented")
+	subscriptionRow := r.db.QueryRowContext(
+		ctx,
+		`SELECT id, confirmed, email, city, frequency_id
+		FROM user_subscriptions
+		WHERE token = $1
+		LIMIT 1`,
+		token,
+	)
+
+	var subscription models.Subscription
+	var frequencyId int
+	err := subscriptionRow.Scan(
+		&subscription.Id,
+		&subscription.Confirmed,
+		&subscription.Email,
+		&subscription.City,
+		&frequencyId,
+	)
+	if err != nil {
+		return models.Subscription{}, err
+	}
+
+	frequencyRow := r.db.QueryRowContext(
+		ctx,
+		"SELECT name FROM frequencies WHERE id = $1 LIMIT 1",
+		frequencyId,
+	)
+	var frequencyName string
+	err = frequencyRow.Scan(&frequencyName)
+	if err != nil {
+		return models.Subscription{}, err
+	}
+
+	subscription.Token = token
+	subscription.Frequency = models.Frequency(frequencyName)
+	return subscription, nil
 }
 
-func (r *subscriptionRepository) GetSubscriptionsByFrequencyContext(
+func (r *subscriptionRepository) GetConfirmedSubscriptionsByFrequencyContext(
 	ctx context.Context,
 	frequency models.Frequency,
 ) ([]models.Subscription, error) {
-	panic("unimplemented")
+	frequencyRow := r.db.QueryRowContext(
+		ctx,
+		"SELECT id FROM frequencies WHERE name = $1 LIMIT 1",
+		frequency,
+	)
+	var frequencyId int
+	err := frequencyRow.Scan(&frequencyId)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionRows, err := r.db.QueryContext(
+		ctx,
+		`SELECT id, token, confirmed, email, city
+		FROM user_subscriptions
+		WHERE frequency_id = $1 AND confirmed = true`,
+		frequencyId,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer subscriptionRows.Close()
+
+	var subscriptions []models.Subscription
+	for subscriptionRows.Next() {
+		var subscription models.Subscription
+		err := subscriptionRows.Scan(
+			&subscription.Id,
+			&subscription.Token,
+			&subscription.Confirmed,
+			&subscription.Email,
+			&subscription.City,
+		)
+		if err != nil {
+			return nil, err
+		}
+		subscription.Frequency = frequency
+		subscriptions = append(subscriptions, subscription)
+	}
+
+	return subscriptions, nil
 }
 
 var ErrConfirmationTokenNotFound = errors.New("confirmation token not found")
 
 func (r *subscriptionRepository) ConfirmSubscriptionContext(ctx context.Context, token uuid.UUID) error {
-	panic("unimplemented")
+	_, err := r.db.ExecContext(
+		ctx,
+		"UPDATE user_subscriptions SET confirmed = true WHERE token = $1",
+		token,
+	)
+	return err
 }
 
 func (r *subscriptionRepository) IsUserSubscribedContext(ctx context.Context, email string, city string) (bool, error) {
@@ -81,9 +161,33 @@ func (r *subscriptionRepository) SubscribeContext(
 	city string,
 	frequency models.Frequency,
 ) error {
-	panic("unimplemented")
+	frequencyRow := r.db.QueryRowContext(
+		ctx,
+		"SELECT id FROM frequencies WHERE name = $1 LIMIT 1",
+		frequency,
+	)
+	var frequencyId int
+	err := frequencyRow.Scan(&frequencyId)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.ExecContext(
+		ctx,
+		"INSERT INTO user_subscriptions (email, token, city, frequency_id) VALUES ($1, $2, $3, $4)",
+		email,
+		token,
+		city,
+		frequencyId,
+	)
+	return err
 }
 
 func (r *subscriptionRepository) UnsubscribeContext(ctx context.Context, token uuid.UUID) error {
-	panic("unimplemented")
+	_, err := r.db.ExecContext(
+		ctx,
+		"DELETE FROM user_subscriptions WHERE token = $1",
+		token,
+	)
+	return err
 }
