@@ -45,11 +45,16 @@ func (j *SendWeatherReportJob) Run(frequency models.Frequency) {
 			}
 		}
 
-		err = j.emailService.SendWeatherReport(subscription.Email, subscription.City, services.WeatherData{
-			Temp:        weather.Temperature,
-			Humidity:    weather.Humidity,
-			Description: weather.Condition,
-		})
+		err = j.emailService.SendWeatherReport(
+			subscription.Email,
+			subscription.City,
+			subscription.Frequency,
+			services.WeatherData{
+				Temp:        weather.Temperature,
+				Humidity:    weather.Humidity,
+				Description: weather.Condition,
+			},
+		)
 		if err != nil {
 			continue
 		}
