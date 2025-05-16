@@ -83,6 +83,7 @@ func main() {
 		emailService,
 		sqlCon,
 		txManager,
+		cfg.CORSConfig,
 	)
 
 	server := &http.Server{

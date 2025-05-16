@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	*WeatherServiceConfig
 	*EmailServiceConfig
 	*DatabaseConfig
+	*CORSConfig
 }
 
 type ServerConfig struct {
@@ -47,6 +49,13 @@ type DatabaseConfig struct {
 	Password        string
 	DatabaseName    string
 	ApplyMigrations bool
+}
+
+type CORSConfig struct {
+	AllowOrigins     []string
+	AllowMethods     []string
+	AllowHeaders     []string
+	AllowCredentials bool
 }
 
 func LoadConfig() (*Config, error) {
@@ -165,6 +174,23 @@ func LoadConfig() (*Config, error) {
 		config.DatabaseConfig.ApplyMigrations = applyMigrationsBool
 	}
 
+	if allowOrigins := os.Getenv("WAPP_CORS_ALLOW_ORIGINS"); allowOrigins != "" {
+		config.CORSConfig.AllowOrigins = strings.Split(allowOrigins, ",")
+	}
+	if allowMethods := os.Getenv("WAPP_CORS_ALLOW_METHODS"); allowMethods != "" {
+		config.CORSConfig.AllowMethods = strings.Split(allowMethods, ",")
+	}
+	if allowHeaders := os.Getenv("WAPP_CORS_ALLOW_HEADERS"); allowHeaders != "" {
+		config.CORSConfig.AllowHeaders = strings.Split(allowHeaders, ",")
+	}
+	if allowCredentials := os.Getenv("WAPP_CORS_ALLOW_CREDENTIALS"); allowCredentials != "" {
+		allowCredentialsBool, err := strconv.ParseBool(allowCredentials)
+		if err != nil {
+			return nil, fmt.Errorf("malformed environment variable WAPP_CORS_ALLOW_CREDENTIALS: %w", err)
+		}
+		config.CORSConfig.AllowCredentials = allowCredentialsBool
+	}
+
 	return config, nil
 }
 
@@ -195,6 +221,12 @@ func getDefaultConfig() *Config {
 			Password:        "password",
 			DatabaseName:    "dbname",
 			ApplyMigrations: false,
+		},
+		CORSConfig: &CORSConfig{
+			AllowOrigins:     []string{"*"},
+			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+			AllowCredentials: false,
 		},
 	}
 }
