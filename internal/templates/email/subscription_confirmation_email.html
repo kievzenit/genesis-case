@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Confirmation</title>
+    <style type="text/css">
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .content {
+            padding: 30px 20px;
+            background-color: #ffffff;
+        }
+        
+        h1 {
+            color: #2b87d1;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2b87d1;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .details h2 {
+            font-size: 18px;
+            margin-top: 0;
+            color: #2b87d1;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #666666;
+            font-size: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .social-links {
+            margin: 15px 0;
+        }
+        
+        .social-icon {
+            display: inline-block;
+            margin: 0 5px;
+            width: 24px;
+            height: 24px;
+            background-color: #0056b3;
+            border-radius: 50%;
+            color: #ffffff;
+            text-align: center;
+            line-height: 24px;
+            text-decoration: none;
+        }
+        
+        @media screen and (max-width: 480px) {
+            .email-container {
+                width: 100% !important;
+                padding: 10px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="content">
+            <h1>Weather report subscription confirmation</h1>
+            
+            <p>Hello there,</p>
+            
+            <p>Please confirm your weather report subscription by reviewing the details below.</p>
+            
+            <div class="details">
+                <h2>Subscription Details:</h2>
+                <p><strong>Email:</strong> {.customerEmail}</p>
+                <p><strong>Location:</strong> {.city}</p>
+                <p><strong>Frequency:</strong> {.frequency}</p>
+                <p><strong>Start Date:</strong> {.date}</p>
+            </div>
+            
+            <p>You'll receive your first weather report within {.reportPeriod}. You can unsubscribe at any time.</p>
+            
+            <div class="button-container">
+                <a href="{.confirmationLink}" class="button">Confirm subscription</a>
+            </div>
+            
+            <p>Stay safe and informed,<br>The Wapp Team</p>
+        </div>
+        
+        <div class="footer">
+            <p><small>To unsubscribe do nothing.</small></p>
+        </div>
+    </div>
+</body>
+</html>
