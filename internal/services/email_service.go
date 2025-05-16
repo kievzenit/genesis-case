@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	// "crypto/tls"
 	"fmt"
 	"html/template"
 	"time"
@@ -21,20 +22,34 @@ type WeatherData struct {
 }
 
 type EmailService interface {
-	SendConfirmationEmail(email string, city string, frequency models.Frequency, token uuid.UUID) error
-	SendWeatherReport(email string, city string, frequency models.Frequency, weatherData WeatherData) error
+	SendConfirmationEmail(
+		email string,
+		city string,
+		frequency models.Frequency,
+		token uuid.UUID,
+	) error
+	SendWeatherReport(
+		email string,
+		city string,
+		token uuid.UUID,
+		frequency models.Frequency,
+		weatherData WeatherData,
+	) error
 }
 
 func NewEmailService(baseURL string, cfg *config.EmailServiceConfig) EmailService {
+	dialer := gomail.NewDialer(
+		cfg.Host,
+		cfg.Port,
+		cfg.Username,
+		cfg.Password,
+	)
+	dialer.SSL = cfg.SSL
+
 	return &emailService{
 		from:    cfg.From,
 		baseURL: baseURL,
-		dialer: gomail.NewDialer(
-			cfg.Host,
-			cfg.Port,
-			cfg.Username,
-			cfg.Password,
-		),
+		dialer:  dialer,
 	}
 }
 
@@ -67,14 +82,10 @@ func (e *emailService) SendConfirmationEmail(
 	msg.SetHeader("To", email)
 	msg.SetHeader("Subject", "Weather subscription confirmation")
 
-	emailBodyTemplate, err := template.ParseFiles("templates/email/subscription_confirmation_email.html")
+	emailBodyTemplate, err := template.ParseFiles("./templates/email/subscription_confirmation_email.html")
 	if err != nil {
 		return err
 	}
-
-	emailBodyTemplate = emailBodyTemplate.Funcs(template.FuncMap{
-		"upperFirstLetter": utils.UpperFirstLetter,
-	})
 
 	var emailBodyBuf bytes.Buffer
 	err = emailBodyTemplate.Execute(&emailBodyBuf, struct {
@@ -104,6 +115,7 @@ func (e *emailService) SendConfirmationEmail(
 func (e *emailService) SendWeatherReport(
 	email string,
 	city string,
+	token uuid.UUID,
 	frequency models.Frequency,
 	weatherData WeatherData,
 ) error {
@@ -113,14 +125,14 @@ func (e *emailService) SendWeatherReport(
 	msg.SetHeader("To", email)
 	msg.SetHeader("Subject", fmt.Sprintf("Weather report for %s", city))
 
-	emailBodyTemplate, err := template.ParseFiles("templates/email/weather_report_email.html")
+	emailBodyTemplate, err := template.New("weather_report_email.html").
+		Funcs(template.FuncMap{
+			"UpperFirstLetter": utils.UpperFirstLetter,
+		}).
+		ParseFiles("./templates/email/weather_report_email.html")
 	if err != nil {
 		return err
 	}
-
-	emailBodyTemplate = emailBodyTemplate.Funcs(template.FuncMap{
-		"upperFirstLetter": utils.UpperFirstLetter,
-	})
 
 	var emailBodyBuf bytes.Buffer
 	err = emailBodyTemplate.Execute(&emailBodyBuf, struct {
@@ -143,7 +155,7 @@ func (e *emailService) SendWeatherReport(
 		Description:     weatherData.Description,
 		Temperature:     fmt.Sprintf("%.2f", weatherData.Temp),
 		Humidity:        fmt.Sprintf("%.2f", weatherData.Humidity),
-		UnsubscribeLink: fmt.Sprintf("http://%s/unsubscribe/%s", e.baseURL, email),
+		UnsubscribeLink: fmt.Sprintf("http://%s/unsubscribe/%s", e.baseURL, token.String()),
 		CustomerEmail:   email,
 	})
 	if err != nil {
