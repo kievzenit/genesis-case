@@ -30,7 +30,10 @@ func NewSendWeatherReportJob(
 func (j *SendWeatherReportJob) Run(frequency models.Frequency) {
 	ctx := context.Background()
 
-	subscriptions, err := j.subscriptionRepository.GetSubscriptionsByFrequencyContext(ctx, frequency)
+	subscriptions, err := j.subscriptionRepository.GetConfirmedSubscriptionsByFrequencyContext(
+		ctx,
+		frequency,
+	)
 	if err != nil {
 		return
 	}
@@ -43,11 +46,13 @@ func (j *SendWeatherReportJob) Run(frequency models.Frequency) {
 			if err != nil {
 				continue
 			}
+			weathers[subscription.City] = weather
 		}
 
 		err = j.emailService.SendWeatherReport(
 			subscription.Email,
 			subscription.City,
+			subscription.Token,
 			subscription.Frequency,
 			services.WeatherData{
 				Temp:        weather.Temperature,
