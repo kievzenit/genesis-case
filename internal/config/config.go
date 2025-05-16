@@ -37,6 +37,7 @@ type EmailServiceConfig struct {
 	Username string
 	Password string
 	From     string
+	SSL      bool
 }
 
 type DatabaseConfig struct {
@@ -129,6 +130,13 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("missing required environment variable: WAPP_EMAIL_FROM")
 	}
 	config.EmailServiceConfig.From = emailFrom
+	if emailSSL := os.Getenv("WAPP_EMAIL_SSL"); emailSSL != "" {
+		emailSSLBool, err := strconv.ParseBool(emailSSL)
+		if err != nil {
+			return nil, fmt.Errorf("malformed environment variable WAPP_EMAIL_SSL: %w", err)
+		}
+		config.EmailServiceConfig.SSL = emailSSLBool
+	}
 
 	if dbHost := os.Getenv("WAPP_DB_HOST"); dbHost != "" {
 		config.DatabaseConfig.Host = dbHost
@@ -176,8 +184,9 @@ func getDefaultConfig() *Config {
 			HttpTimeout: 3,
 		},
 		EmailServiceConfig: &EmailServiceConfig{
-			Host: "smtp.example.com",
+			Host: "smtp.gmail.com",
 			Port: 587,
+			SSL:  true,
 		},
 		DatabaseConfig: &DatabaseConfig{
 			Host:            "localhost",
