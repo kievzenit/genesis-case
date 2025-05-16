@@ -7,6 +7,7 @@ services:
       - "8080:8080"
     environment:
       - WAPP_BASE_URL=localhost:8080
+      - WAPP_SERVER_ADDRESS=0.0.0.0
       - WAPP_DB_HOST=db
       - WAPP_DB_PORT=5432
       - WAPP_DB_USER=wapp_user
@@ -18,6 +19,8 @@ services:
       - WAPP_EMAIL_USERNAME=test@wapp.org
       - WAPP_EMAIL_PASSWORD=test
       - WAPP_EMAIL_FROM=test@wapp.org
+      - WAPP_EMAIL_SSL=false
+      - GIN_MODE=release
     env_file:
       - .env
     depends_on:
