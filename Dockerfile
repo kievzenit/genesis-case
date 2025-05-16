@@ -11,5 +11,6 @@ RUN go build -o server ./cmd/server/main.go
 FROM scratch
 COPY --from=builder /app/server /server
 COPY ./migrations /migrations
+COPY ./templates /templates
 
 ENTRYPOINT ["/server"]
