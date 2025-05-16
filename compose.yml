@@ -6,17 +6,25 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - WAPP_BASE_URL=localhost:8080
       - WAPP_DB_HOST=db
       - WAPP_DB_PORT=5432
       - WAPP_DB_USER=wapp_user
       - WAPP_DB_PASS=wapp_password
       - WAPP_DB_NAME=wapp_db
       - WAPP_DB_APPLY_MIGRATIONS=true
+      - WAPP_EMAIL_HOST=email_provider
+      - WAPP_EMAIL_PORT=25
+      - WAPP_EMAIL_USERNAME=test@wapp.org
+      - WAPP_EMAIL_PASSWORD=test
+      - WAPP_EMAIL_FROM=test@wapp.org
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
+      email_provider:
+        condition: service_started
   db:
     image: postgres:17-alpine
     ports:
@@ -30,3 +38,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  email_provider:
+    image: changemakerstudiosus/papercut-smtp:latest
+    ports:
+      - "25:25"
+      - "6569:80"
