@@ -84,7 +84,7 @@ func SubscribeForWeatherHandler(
 }
 
 func ConfirmSubscriptionHandler(database database.Database) gin.HandlerFunc {
-	return func (c *gin.Context) {
+	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 
 		tokenParam := c.Param("token")
@@ -93,14 +93,14 @@ func ConfirmSubscriptionHandler(database database.Database) gin.HandlerFunc {
 			return
 		}
 
-		token := uuid.MustParse(tokenParam)
-		if token == uuid.Nil {
+		token, err := uuid.Parse(tokenParam)
+		if err != nil {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		subscriptionRepository := repositories.NewSubscriptionRepository(database)
-		err := subscriptionRepository.ConfirmSubscriptionContext(ctx, token)
+		err = subscriptionRepository.ConfirmSubscriptionContext(ctx, token)
 		if err != nil {
 			if err == repositories.ErrConfirmationTokenNotFound {
 				c.AbortWithStatus(http.StatusNotFound)
@@ -122,14 +122,14 @@ func UnsubscribeHandler(database database.Database) gin.HandlerFunc {
 			return
 		}
 
-		token := uuid.MustParse(tokenParam)
-		if token == uuid.Nil {
+		token, err := uuid.Parse(tokenParam)
+		if err != nil {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		subscriptionRepository := repositories.NewSubscriptionRepository(database)
-		err := subscriptionRepository.UnsubscribeContext(ctx, token)
+		err = subscriptionRepository.UnsubscribeContext(ctx, token)
 		if err != nil {
 			if err == repositories.ErrConfirmationTokenNotFound {
 				c.AbortWithStatus(http.StatusNotFound)
