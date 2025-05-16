@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{.frequency | upperFirstLetter} Weather Report</title>
+    <title>{{.Frequency | UpperFirstLetter}} Weather Report</title>
     <style type="text/css">
         body, html {
             margin: 0;
@@ -159,24 +159,24 @@
 <body>
     <div class="email-container">
         <div class="content">
-            <h1>{.frequency | upperFirstLetter} weather report</h1>
+            <h1>{{.Frequency | UpperFirstLetter}} weather report</h1>
             
             <p>Hello there,</p>
             
-            <p>Here's your {.frequency} weather update for today, {.date}.</p>
+            <p>Here's your {{.Frequency}} weather update for today, {{.Date}}.</p>
             
             <div class="weather-container">
-                <div class="city-name">.{city}</div>
-                <div class="date">{.fullDate} | {.time}</div>
+                <div class="city-name">{{.City}}</div>
+                <div class="date">{{.FullDate}} | {{.Time}}</div>
                 
-                <div class="weather-description">{.description}</div>
-                <div class="temperature">.{temperature}°C</div>
+                <div class="weather-description">{{.Description}}</div>
+                <div class="temperature">{{.Temperature}}°C</div>
                 
                 <div class="details-grid">
                     <div class="details-row">
                         <div class="detail-cell" style="width: 100%;">
                             <div class="detail-label">HUMIDITY</div>
-                            <div class="detail-value">{.humidity}%</div>
+                            <div class="detail-value">{{.Humidity}}%</div>
                         </div>
                     </div>
                 </div>
@@ -185,12 +185,12 @@
             <p>Stay safe and informed,<br>The Wapp Team</p>
             
             <div style="text-align: center;">
-                <a href="{.unsubscibeLink}" class="unsubscribe-button">Unsubscribe from weather alerts</a>
+                <a href="{{.UnsubscribeLink}}" class="unsubscribe-button">Unsubscribe from weather alerts</a>
             </div>
         </div>
         
         <div class="footer">
-            <p><small>This weather report is sent to {.customerEmail}.</small></p>
+            <p><small>This weather report is sent to {{.CustomerEmail}}.</small></p>
         </div>
     </div>
 </body>

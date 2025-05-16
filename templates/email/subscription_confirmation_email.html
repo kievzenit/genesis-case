@@ -121,16 +121,16 @@
             
             <div class="details">
                 <h2>Subscription Details:</h2>
-                <p><strong>Email:</strong> {.customerEmail}</p>
-                <p><strong>Location:</strong> {.city}</p>
-                <p><strong>Frequency:</strong> {.frequency}</p>
-                <p><strong>Start Date:</strong> {.date}</p>
+                <p><strong>Email:</strong> {{.CustomerEmail}}</p>
+                <p><strong>Location:</strong> {{.City}}</p>
+                <p><strong>Frequency:</strong> {{.Frequency}}</p>
+                <p><strong>Start Date:</strong> {{.Date}}</p>
             </div>
             
-            <p>You'll receive your first weather report within {.reportPeriod}. You can unsubscribe at any time.</p>
+            <p>You'll receive your first weather report within {{.ReportPeriod}}. You can unsubscribe at any time.</p>
             
             <div class="button-container">
-                <a href="{.confirmationLink}" class="button">Confirm subscription</a>
+                <a href="{{.ConfirmationLink}}" class="button">Confirm subscription</a>
             </div>
             
             <p>Stay safe and informed,<br>The Wapp Team</p>
