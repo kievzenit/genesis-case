@@ -29,22 +29,36 @@ func NewSendConfirmationEmailJob(
 
 func (job *SendConfirmationEmailJob) Run() {
 	err := job.txManager.ExecuteTx(func(tx *sql.Tx) error {
-		repository := repositories.NewConfirmationEmailsRepository(tx)
+		confirmationEmailsRepository := repositories.NewConfirmationEmailsRepository(tx)
+		subscriptionsRepository := repositories.NewSubscriptionRepository(tx)
 
-		emails, err := repository.GetConfirmationEmailsToSend(context.Background())
+		emails, err := confirmationEmailsRepository.GetConfirmationEmailsToSend(context.Background())
 		if err != nil {
 			return err
 		}
 
 		for _, email := range emails {
-			err = job.emailService.SendConfirmationEmail(email.ToAddress, email.Token)
+			subscription, err := subscriptionsRepository.GetSubscriptionByTokenContext(
+				context.Background(), 
+				email.Token,
+			)
+			if err != nil {
+				return err
+			}
+						
+			err = job.emailService.SendConfirmationEmail(
+				email.ToAddress,
+				subscription.City,
+				subscription.Frequency,
+				email.Token,
+			)
 			if err != nil {
 				email.Attempts++
 
 				delay := time.Duration(math.Pow(2, float64(email.Attempts))) * time.Minute
 				email.NextTryAfter = time.Now().UTC().Add(delay)
 
-				err = repository.UpdateConfirmationEmail(context.Background(), email)
+				err = confirmationEmailsRepository.UpdateConfirmationEmail(context.Background(), email)
 				if err != nil {
 					return err
 				}
@@ -54,7 +68,7 @@ func (job *SendConfirmationEmailJob) Run() {
 
 			email.Attempts++
 			email.Completed = true
-			err = repository.UpdateConfirmationEmail(context.Background(), email)
+			err = confirmationEmailsRepository.UpdateConfirmationEmail(context.Background(), email)
 			if err != nil {
 				return err
 			}
