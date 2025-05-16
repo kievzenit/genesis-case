@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	BaseURL string
 	*ServerConfig
 	*JobsConfig
 	*WeatherServiceConfig
@@ -30,7 +31,13 @@ type WeatherServiceConfig struct {
 	HttpTimeout int
 }
 
-type EmailServiceConfig struct {}
+type EmailServiceConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+}
 
 type DatabaseConfig struct {
 	Host            string
@@ -43,6 +50,12 @@ type DatabaseConfig struct {
 
 func LoadConfig() (*Config, error) {
 	config := getDefaultConfig()
+
+	baseURL := os.Getenv("WAPP_BASE_URL")
+	if baseURL == "" {
+		return nil, fmt.Errorf("missing required environment variable: WAPP_BASE_URL")
+	}
+	config.BaseURL = baseURL
 
 	if addr := os.Getenv("WAPP_SERVER_ADDRESS"); addr != "" {
 		config.ServerConfig.Address = addr
@@ -91,6 +104,32 @@ func LoadConfig() (*Config, error) {
 
 	config.WeatherServiceConfig.ApiKey = apiKey
 
+	if emailHost := os.Getenv("WAPP_EMAIL_HOST"); emailHost != "" {
+		config.EmailServiceConfig.Host = emailHost
+	}
+	if emailPort := os.Getenv("WAPP_EMAIL_PORT"); emailPort != "" {
+		port, err := strconv.Atoi(emailPort)
+		if err != nil {
+			return nil, fmt.Errorf("malformed environment variable WAPP_EMAIL_PORT: %w", err)
+		}
+		config.EmailServiceConfig.Port = port
+	}
+	emailUsername := os.Getenv("WAPP_EMAIL_USERNAME")
+	if emailUsername == "" {
+		return nil, fmt.Errorf("missing required environment variable: WAPP_EMAIL_USERNAME")
+	}
+	config.EmailServiceConfig.Username = emailUsername
+	emailPassword := os.Getenv("WAPP_EMAIL_PASSWORD")
+	if emailPassword == "" {
+		return nil, fmt.Errorf("missing required environment variable: WAPP_EMAIL_PASSWORD")
+	}
+	config.EmailServiceConfig.Password = emailPassword
+	emailFrom := os.Getenv("WAPP_EMAIL_FROM")
+	if emailFrom == "" {
+		return nil, fmt.Errorf("missing required environment variable: WAPP_EMAIL_FROM")
+	}
+	config.EmailServiceConfig.From = emailFrom
+
 	if dbHost := os.Getenv("WAPP_DB_HOST"); dbHost != "" {
 		config.DatabaseConfig.Host = dbHost
 	}
@@ -135,6 +174,10 @@ func getDefaultConfig() *Config {
 		WeatherServiceConfig: &WeatherServiceConfig{
 			ApiKey:      "",
 			HttpTimeout: 3,
+		},
+		EmailServiceConfig: &EmailServiceConfig{
+			Host: "smtp.example.com",
+			Port: 587,
 		},
 		DatabaseConfig: &DatabaseConfig{
 			Host:            "localhost",
