@@ -20,6 +20,10 @@ type SubscriptionRepository interface {
 	) error
 	ConfirmSubscriptionContext(ctx context.Context, token uuid.UUID) error
 	UnsubscribeContext(ctx context.Context, token uuid.UUID) error
+	GetSubscriptionByTokenContext(
+		ctx context.Context,
+		token uuid.UUID,
+	) (models.Subscription, error)
 	GetSubscriptionsByFrequencyContext(
 		ctx context.Context,
 		frequency models.Frequency,
@@ -32,6 +36,13 @@ func NewSubscriptionRepository(db database.Database) SubscriptionRepository {
 
 type subscriptionRepository struct {
 	db database.Database
+}
+
+func (r *subscriptionRepository) GetSubscriptionByTokenContext(
+	ctx context.Context,
+	token uuid.UUID,
+) (models.Subscription, error) {
+	panic("unimplemented")
 }
 
 func (r *subscriptionRepository) GetSubscriptionsByFrequencyContext(
