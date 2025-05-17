@@ -13,6 +13,12 @@ import (
 	"github.com/kievzenit/genesis-case/internal/services"
 )
 
+type subscriptionData struct {
+	Email     string `json:"email" form:"email"`
+	City      string `json:"city" form:"city"`
+	Frequency string `json:"frequency" form:"frequency"`
+}
+
 func SubscribeForWeatherHandler(
 	weatherService services.WeatherService,
 	emailService services.EmailService,
@@ -22,32 +28,51 @@ func SubscribeForWeatherHandler(
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 
-		email := c.PostForm("email")
-		if email == "" {
+		var data subscriptionData
+
+		// In swagger specification was defined that this endpoint should accept both
+		// application/json and application/x-www-form-urlencoded content types.
+		// Maybe that was an error, but it was said, that we need 100% be complaint with API specification.
+		// So I implemented both content types.
+		contentType := c.Request.Header.Get("Content-Type")
+		if contentType == "application/json" {
+			err := c.BindJSON(&data)
+			if err != nil {
+				c.AbortWithError(http.StatusBadRequest, err)
+				return
+			}
+		} else if contentType == "application/x-www-form-urlencoded" {
+			data.Email = c.PostForm("email")
+			data.City = c.PostForm("city")
+			data.Frequency = c.PostForm("frequency")
+		} else {
+			c.AbortWithStatus(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		if data.Email == "" {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
-		city := c.PostForm("city")
-		if city == "" {
+		if data.City == "" {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
-		frequencyString := c.PostForm("frequency")
-		if frequencyString == "" {
+		if data.Frequency == "" {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
-		frequency := models.Frequency(frequencyString)
+		frequency := models.Frequency(data.Frequency)
 		if !frequency.IsValid() {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		subscriptionRepository := repositories.NewSubscriptionRepository(database)
-		exists, err := subscriptionRepository.IsUserSubscribedContext(ctx, email, city)
+		exists, err := subscriptionRepository.IsUserSubscribedContext(ctx, data.Email, data.City)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
@@ -62,7 +87,7 @@ func SubscribeForWeatherHandler(
 			confirmationEmailRepository := repositories.NewConfirmationEmailsRepository(tx)
 
 			token := uuid.New()
-			err = subscriptionRepository.SubscribeContext(ctx, email, token, city, frequency)
+			err = subscriptionRepository.SubscribeContext(ctx, data.Email, token, data.City, frequency)
 			if err != nil {
 				return err
 			}
@@ -70,7 +95,7 @@ func SubscribeForWeatherHandler(
 			return confirmationEmailRepository.StoreConfirmationEmail(
 				ctx,
 				models.ConfirmationEmail{
-					ToAddress:    email,
+					ToAddress:    data.Email,
 					Token:        token,
 					NextTryAfter: time.Now().UTC(),
 				},
